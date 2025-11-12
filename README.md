@@ -1,4 +1,3 @@
-
 <div align="center">
 
 # 🧠 n8n-json2toon-converter  
@@ -8,6 +7,7 @@
 ![Status](https://img.shields.io/badge/status-active-success)
 ![Made with](https://img.shields.io/badge/made%20with-JavaScript-yellow)
 ![LLM Ready](https://img.shields.io/badge/optimized%20for-LLMs-green)
+![License](https://img.shields.io/badge/license-MIT-blue)
 
 </div>
 
@@ -15,117 +15,146 @@
 
 ## 🧩 Visão Geral
 
-Este projeto contém um **workflow para n8n** que demonstra a conversão de dados do formato **JSON** para o formato **TOON (Token-Oriented Object Notation)** — um formato de serialização otimizado para **reduzir o uso de tokens** ao enviar dados estruturados para **Modelos de Linguagem Grandes (LLMs)**.
+Este projeto apresenta um **workflow para n8n** que demonstra a conversão de dados do formato **JSON** para **TOON (Token-Oriented Object Notation)** — um formato de serialização otimizado para **economizar tokens** e **aumentar a eficiência de prompts em LLMs (Modelos de Linguagem Grandes)**.
 
-O objetivo é mostrar, de forma prática, como o TOON pode diminuir custos e aumentar a eficiência de prompts em IA.
+💡 **Objetivo:** mostrar, de forma prática, como o TOON pode reduzir custos e melhorar a velocidade de resposta de aplicações de IA.
 
 ---
 
-## 🌀 O que é o Formato TOON?
+## 🌀 O que é o TOON?
 
-**TOON (Token-Oriented Object Notation)** é um formato de serialização compacto, legível e projetado para **máxima eficiência de tokens**.  
-Ele combina a **estrutura hierárquica do YAML** com o **formato tabular do CSV**, eliminando redundâncias como chaves, colchetes e aspas.
+**TOON (Token-Oriented Object Notation)** é um formato de dados **criado para o ecossistema de IAs**.  
+Ele foi desenvolvido para **reduzir o ruído estrutural** presente em formatos como JSON e YAML — eliminando chaves repetidas, aspas e delimitadores desnecessários — mantendo, ainda assim, uma estrutura legível e lógica.
 
-### 🔍 Exemplo Comparativo
+> 🔬 *Segundo benchmarks recentes*, TOON pode reduzir o uso de tokens em **30–60%** em comparação ao JSON equivalente, especialmente em dados tabulares e uniformes.
 
-**JSON (minificado) — 138 caracteres**
+---
+
+## 🔍 Exemplo Comparativo
+
+### 📊 JSON (minificado) — 198 caracteres
 ```json
-{"categories":[{"id":1,"name":"financeiro"},{"id":2,"name":"compras"},{"id":3,"name":"medicina"},{"id":4,"name":"segurança do trabalho"}]}
+{"users":[{"id":1,"name":"Alice","role":"admin","email":"alice@example.com"},{"id":2,"name":"Bob","role":"user","email":"bob@example.com"},{"id":3,"name":"Charlie","role":"editor","email":"charlie@example.com"}]}
 ````
 
-**TOON — 85 caracteres**
+### 🪶 TOON — 119 caracteres
 
 ```toon
-categories[4]{id,name}:
-  1,financeiro
-  2,compras
-  3,medicina
-  4,segurança do trabalho
+users[3]{id,name,role,email}:
+  1,Alice,admin,alice@example.com
+  2,Bob,user,bob@example.com
+  3,Charlie,editor,charlie@example.com
 ```
+
+### ⚖️ Comparativo direto
+
+| Métrica                   | JSON     | TOON  | Diferença               |
+| ------------------------- | -------- | ----- | ----------------------- |
+| Comprimento (caracteres)  | 198      | 119   | 🔽 **40% menor**        |
+| Estrutura repetitiva      | Alta     | Baixa | ✅ Eliminada             |
+| Leitura humana            | Moderada | Alta  | ✅ Mais limpa            |
+| Tokens em LLMs (estimado) | ~140     | ~85   | 💰 **~40% de economia** |
+
+> 🧠 TOON declara uma única vez o formato da coleção (`users[3]{id,name,role,email}`)
+> e depois lista apenas os valores. Isso reduz drasticamente redundâncias e tokens.
 
 ---
 
 ## ⚡ Vantagens do TOON para LLMs
 
-| 💡 Benefício                         | 🧾 Descrição                                                                                |
-| ------------------------------------ | ------------------------------------------------------------------------------------------- |
-| 💸 **Economia de Tokens**            | Redução de **30% a 60%** no uso de tokens em relação ao JSON.                               |
-| 🚀 **Maior Velocidade e Precisão**   | Menos tokens = respostas mais rápidas e precisas.                                           |
-| 🧱 **Estrutura Segura (Guardrails)** | Inclui metadados explícitos (`users[3]{id,name}`), úteis para LLMs verificarem integridade. |
-| 👓 **Legibilidade Humana**           | Sintaxe clara, leve e visualmente limpa, unindo YAML + CSV.                                 |
-
-> 📊 *Em benchmarks, o TOON atingiu **73.9% de acurácia** na recuperação de dados — superior ao JSON formatado (69.7%).*
+| 💡 Benefício                           | 🧾 Descrição                                                         |
+| -------------------------------------- | -------------------------------------------------------------------- |
+| 💸 **Economia de Tokens**              | Redução média de **30–60%** no custo de prompts.                     |
+| 🚀 **Respostas mais rápidas**          | Menos tokens = inferência mais veloz e contexto mais claro.          |
+| 🧱 **Estrutura explícita e limpa**     | Declarações como `users[3]{id,name}` ajudam LLMs a entender padrões. |
+| 👓 **Legível para humanos e máquinas** | Inspiração híbrida entre YAML e CSV.                                 |
+| 🤖 **Otimizado para IA**               | Foco em conteúdo semântico, não em sintaxe.                          |
 
 ---
 
 ## 🔧 Sobre este Workflow n8n
 
-O workflow demonstra o funcionamento do TOON com uma **prova de conceito prática**:
+Este workflow implementa uma **prova de conceito funcional** da conversão JSON → TOON dentro do [n8n](https://n8n.io/).
 
-1. **🕹️ Manual Trigger:** Inicia o fluxo manualmente.
-2. **🌎 Get Feriados BR 2026 (HTTP Request):** Obtém dados da API pública `https://brasilapi.com.br/api/feriados/v1/2026`.
-3. **🧮 Aggregate:** Agrupa os resultados em um único item.
-4. **🧠 Json → Toon Converter (Code):**
+### 🔁 Etapas do fluxo:
 
-   * Contém a função `jsonToToon` (recursiva).
-   * Usa `convertArrayToToon` para transformar arrays de objetos em formato tabular TOON.
-   * Retorna o resultado convertido.
-5. **📊 Nós de Comparação:**
+1. **🕹️ Manual Trigger** — Inicia o fluxo manualmente.
+2. **🌎 HTTP Request (Feriados BR 2026)** — Obtém dados da API `https://brasilapi.com.br/api/feriados/v1/2026`.
+3. **🧮 Aggregate** — Agrupa o JSON retornado.
+4. **🧠 Json → Toon Converter (Code)** —
 
-   * Estimam a contagem de tokens do **JSON original** e do **TOON convertido**.
-   * Permitem observar diretamente a diferença de custo/token.
+   * Usa a função recursiva `jsonToToon()` e `convertArrayToToon()`
+   * Converte estruturas uniformes em formato TOON.
+5. **📊 Estima Tokens (Comparação)** —
+
+   * Mostra a diferença de contagem de tokens entre JSON e TOON.
 
 ---
 
 ## 🧭 Como Usar
 
-1. **⬇️ Baixe o Workflow:**
-   Faça o download do arquivo [`Json2Toon.json`](./Json2Toon.json).
+1. **⬇️ Baixe o workflow:**
+   [`Json2Toon.json`](./Json2Toon.json)
+
 2. **📥 Importe no n8n:**
-   Em sua instância n8n, vá em **Import → From File** e selecione o arquivo.
+   Em sua instância, vá em **Import → From File**.
+
 3. **▶️ Execute:**
-   Abra o workflow e clique em **Execute Workflow**.
-4. **📈 Compare os Resultados:**
-   Verifique a diferença de tokens entre os nós “Estima tokens (JSON)” e “Estima tokens (TOON)”.
+   Clique em **Execute Workflow**.
+
+4. **📈 Compare os resultados:**
+   Veja a diferença de tokens entre o JSON e o TOON diretamente nos nós de comparação.
 
 ---
 
 ## 🧰 Personalização
 
-Quer usar com seus próprios dados?
+Você pode adaptar o workflow para seus próprios dados:
 
-➡️ Basta substituir o nó **“Get Feriados BR 2026”** por:
-
-* Um **Webhook**,
-* Um **Read File**, ou
-* Uma **outra API** que retorne JSON.
-
-Conecte essa fonte ao nó **Aggregate** e mantenha o conversor ativo.
+* Substitua o nó **HTTP Request** por um **Webhook**, **Read File** ou **outra API**.
+* Conecte o resultado ao nó **Aggregate** e mantenha o nó **Json → Toon Converter**.
 
 ---
 
 ## ⚠️ Limitações (Quando *não* usar TOON)
 
-| ❌ Cenário                                   | 💬 Alternativa          |
-| ------------------------------------------- | ----------------------- |
-| Estruturas muito aninhadas ou não uniformes | Use **JSON minificado** |
-| Dados tabulares simples                     | Use **CSV**             |
+| ❌ Cenário                                        | 💬 Alternativa          |
+| ------------------------------------------------ | ----------------------- |
+| Estruturas muito aninhadas ou heterogêneas       | Use **JSON minificado** |
+| Dados puramente tabulares (sem hierarquia)       | Use **CSV**             |
+| Necessidade de compatibilidade ampla (REST APIs) | JSON ainda é o padrão   |
+
+---
+
+## 🧱 TOON vs JSON — Diferenças Técnicas
+
+| Aspecto               | JSON                                         | TOON                                              |
+| --------------------- | -------------------------------------------- | ------------------------------------------------- |
+| Estrutura             | Baseada em chaves/valores com delimitadores. | Baseada em blocos declarativos e linhas de dados. |
+| Redundância           | Alta                                         | Mínima                                            |
+| Tokenização para LLMs | Ineficiente                                  | Otimizada                                         |
+| Legibilidade humana   | Boa                                          | Excelente                                         |
+| Compactação           | Nenhuma                                      | Implícita pela estrutura                          |
+| Finalidade            | Web & APIs                                   | IA & LLMs                                         |
 
 ---
 
 ## 👨‍💻 Autor
 
 **Daniel Dias Pereira**
-
 [![GitHub](https://img.shields.io/badge/GitHub-DanielDPereira-181717?logo=github)](https://github.com/DanielDPereira)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Daniel%20Dias%20Pereira-blue?logo=linkedin)](https://www.linkedin.com/in/daniel-dias-pereira-40219425b/)
+[![n8n](https://img.shields.io/badge/n8n.io-Automation-orange?logo=n8n)](https://community.n8n.io/u/danieldpereira/)
 
 ---
 
 ## 📚 Referências
 
 * 🧾 [Repositório Oficial do TOON](https://github.com/toon-format/toon)
-* 📰 [Artigo no TabNews: *TOON — Leve, Rápido e as IAs Adoram!*](https://www.tabnews.com.br/wpbarcelos/toon-leve-rapido-e-as-ias-adoram)
+* 📰 [TabNews – *TOON: leve, rápido e as IAs adoram!*](https://www.tabnews.com.br/wpbarcelos/toon-leve-rapido-e-as-ias-adoram)
+* 💬 [Zeeshan – *What is TOON? Benefits, Applications and Difference from JSON*](https://zeeshan.p2pclouds.net/blogs/what-is-toon-its-benefits-applications-and-difference-from-json/)
+* 🧠 [Dev.to – *TOON vs JSON: A Modern Data Format Showdown*](https://dev.to/sreeni5018/toon-vs-json-a-modern-data-format-showdown-2ooc)
+* 📖 [Medium – *TOON vs JSON for LLMs*](https://medium.com/@speaktoharisudhan/toon-vs-json-for-llms-cc541c7a1251)
 
 ---
 
@@ -135,6 +164,3 @@ Conecte essa fonte ao nó **Aggregate** e mantenha o conversor ativo.
 Feito com ❤️ por [Daniel Dias Pereira](https://github.com/DanielDPereira)
 
 </div>
-
-
----
