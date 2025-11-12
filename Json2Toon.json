@@ -1,0 +1,161 @@
+{
+  "name": "Json -> Toon",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        80
+      ],
+      "id": "aafbd508-bfa1-493f-b32e-9e5f714ca866",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        336,
+        80
+      ],
+      "id": "4c9b322e-9b67-4d0c-a4b4-313900311596",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtem o JSON do webhook\nconst input = items[0].json;\n\n// Função para converter array de objetos em TOON tabular\nfunction convertArrayToToon(arrayName, arr) {\n  if (!Array.isArray(arr) || arr.length === 0) return '';\n\n  const keys = Object.keys(arr[0]);\n  const header = `${arrayName}[${arr.length}]{${keys.join(',')}}:`;\n  const rows = arr.map(obj => `  ${keys.map(k => obj[k]).join(',')}`);\n  return [header, ...rows].join('\\n');\n}\n\n// Função principal de conversão\nfunction jsonToToon(obj) {\n  let result = [];\n\n  for (const [key, value] of Object.entries(obj)) {\n    if (Array.isArray(value) && typeof value[0] === 'object') {\n      // Array de objetos → formato tabular\n      result.push(convertArrayToToon(key, value));\n    } else if (typeof value === 'object' && value !== null) {\n      // Objeto → processar recursivamente\n      const inner = jsonToToon(value);\n      result.push(`${key}:{\\n${inner}\\n}`);\n    } else {\n      // Valor simples\n      result.push(`${key}:${value}`);\n    }\n  }\n\n  return result.join('\\n');\n}\n\n// Converter o JSON recebido\nconst toonOutput = jsonToToon(input);\n\n// Retornar resultado\nreturn [{ json: { toon: toonOutput } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        -16
+      ],
+      "id": "5b963eb1-5444-4d03-88a2-717b9ed14d2e",
+      "name": "Json -> Toon Converter"
+    },
+    {
+      "parameters": {
+        "content": "## Recebe JSON em chamada de API e converte para o formato TOON (Token-Oriented Object Notation) \n",
+        "height": 464,
+        "width": 1200,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -176,
+        -112
+      ],
+      "typeVersion": 1,
+      "id": "82d6fb0f-b7ad-4f99-93fb-19ddfc71d967",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "url": "https://brasilapi.com.br/api/feriados/v1/2026",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        112,
+        80
+      ],
+      "id": "265dbc4c-1935-4d69-95ac-9901e0338af9",
+      "name": "Get Feriados BR 2026"
+    },
+    {
+      "parameters": {
+        "jsCode": "const jsonString = JSON.stringify(items[0].json);\nconst charCount = jsonString.length;\nconst estimatedTokens = Math.ceil(charCount / 4);\n\nreturn [{\n  json: {\n    caracteres: charCount,\n    tokens_estimados: estimatedTokens\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        784,
+        -16
+      ],
+      "id": "54ec454f-7368-4ae5-9891-1c3b2a58d521",
+      "name": "Estima a quantidade de tokens (TOON)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const jsonString = JSON.stringify(items[0].json);\nconst charCount = jsonString.length;\nconst estimatedTokens = Math.ceil(charCount / 4);\n\nreturn [{\n  json: {\n    caracteres: charCount,\n    tokens_estimados: estimatedTokens\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        176
+      ],
+      "id": "687c4525-2313-4765-a6b6-b5cf496e5b62",
+      "name": "Estima a quantidade de tokens (JSON)"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get Feriados BR 2026",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Json -> Toon Converter",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Estima a quantidade de tokens (JSON)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Json -> Toon Converter": {
+      "main": [
+        [
+          {
+            "node": "Estima a quantidade de tokens (TOON)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Feriados BR 2026": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "8a27e6d3-091c-4367-8d8b-d25531948ba2",
+  "meta": {
+    "instanceId": "50c4acb1ec944112da453a63f2f6320a96a3bc9f1a4e5f7f1f7bc4c7447d56ce"
+  },
+  "id": "Y7h88mYEQuyIlirp",
+  "tags": []
+}
